@@ -45,6 +45,7 @@ async function identifySoundWords(text) {
         
         // Check if response body contains content
         if (result?.content && result?.content[0]?.text) {
+            console.log(result.content[0].text)
             return result.content[0].text; // Return the raw text response
         }
         

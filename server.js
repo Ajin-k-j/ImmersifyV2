@@ -18,17 +18,22 @@ app.post('/api/identify-sounds', async (req, res) => {
     const uncachedWords = words.filter(word => !soundCache[word]);
 
     let sounds = [];
-    let sentiment = 'neutral';
+    let sentiment = 'neutral'; // Default sentiment
 
     try {
         // If there are uncached words, process them with AWS Bedrock
         if (uncachedWords.length > 0) {
             const response = await identifySoundWords(uncachedWords.join(' '));
-            const match = response.match(/Sound: (.*?), Sentiment: (.*)/);
+
+            // Adjust the regex to match just the sound-producing words
+            const match = response.match(/Sound: ([^,]+)(?:, Sentiment: (.*))?/);
 
             if (match) {
+                // Extract sound-producing words and remove unnecessary spaces
                 const foundSounds = match[1].split(',').map(w => w.trim());
-                sentiment = match[2].trim();
+
+                // If Sentiment exists, assign it
+                sentiment = match[2] ? match[2].trim() : sentiment;
 
                 // Update cache with the new sounds
                 foundSounds.forEach(sound => {
@@ -46,7 +51,7 @@ app.post('/api/identify-sounds', async (req, res) => {
             ])
         ];
 
-        console.log('Sound-producing words:', sounds); // Log sounds one by one
+        
         sounds.forEach(sound => console.log(sound));
 
         res.json({ sounds, sentiment });
@@ -55,6 +60,8 @@ app.post('/api/identify-sounds', async (req, res) => {
         res.status(500).json({ error: 'Failed to identify sounds' });
     }
 });
+
+
 
 // Start the server
 const PORT = process.env.PORT || 3000;
