@@ -1,0 +1,15 @@
+{
+    "name": "sound-word-identifier",
+    "version": "1.0.0",
+    "description": "A Node.js app to identify sound-producing words using AWS Bedrock with caching",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "@aws-sdk/client-bedrock-runtime": "^3.731.1",
+        "body-parser": "^1.20.3",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2"
+    }
+}
