@@ -25,7 +25,7 @@ async function identifySoundWords(text) {
                 content: [
                     {
                         type: "text", // Content type, text is used here
-                        text: `Extract and return only the sound-producing words from the following sentence: "${text}". Sound-producing words include animal sounds (e.g., lion, cat), natural sounds (e.g., rain, thunder), and other sounds (e.g., baby crying, crash). Even if only the name of an animal or sound is mentioned, it should be picked up as a sound-producing word. Format the response as: Sound: [sound-producing words].`
+                        text: `Extract and return only the sound-producing words and sentiment from the following sentence: "${text}". Sound-producing words include animal sounds (e.g., lion, cat), natural sounds (e.g., rain, thunder), and other sounds (e.g., baby crying, crash). Even if only the name of an animal or sound is mentioned, it should be picked up as a sound-producing word, if its lion roar, lion and roar must be given as two seprate sound producing wor. Format the response as: Sound: [sound-producing words], Sentiment: [sentiment].`
                     }
                 ]
             }
@@ -45,6 +45,7 @@ async function identifySoundWords(text) {
         
         // Check if response body contains content
         if (result?.content && result?.content[0]?.text) {
+            console.log("here")
             console.log(result.content[0].text)
             return result.content[0].text; // Return the raw text response
         }

@@ -6,6 +6,8 @@ let isListening = false;
 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 recognition.continuous = true;
 recognition.interimResults = true;
+let alreadyHighlightedText = "";
+var processedTranscriptsArray = [];
 
 // Local cache for sound-producing words
 let soundCache = {};
@@ -28,6 +30,25 @@ function playSound(soundFile) {
     audio.play();
 }
 
+function getTranscriptData(transcript) {
+    var transcriptData = "";
+    Array.from(event.results).forEach(speechRecognitionResult => {
+        if (speechRecognitionResult.isFinal)
+        {
+            transcriptData = speechRecognitionResult[0].transcript;
+            transcriptData = transcriptData.replace(alreadyHighlightedText, "");
+            alreadyHighlightedText = transcriptData.length === 0 ? alreadyHighlightedText : transcriptData;
+            if (transcriptData.length > 0 && !processedTranscriptsArray.includes(transcriptData))
+            {
+                console.log("Sound recog text = " + transcriptData);
+                processedTranscriptsArray.push(transcriptData);
+            }            
+        }
+    });
+    return transcriptData;
+}
+
+
 // Handle speech recognition results
 recognition.onresult = (event) => {
     const transcript = Array.from(event.results)
@@ -35,15 +56,18 @@ recognition.onresult = (event) => {
         .map(result => result.transcript)
         .join(' ');
 
-    // Highlight locally cached words
-    highlightSoundWords(transcript);
+    var transcriptData = getTranscriptData(event);    
+    
+    if (transcriptData.length > 0) {
+        // Highlight locally cached words
+        highlightSoundWords(transcriptData);
 
-    // Send to backend for additional processing
-    fetch('/api/identify-sounds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: transcript })
-    })
+        // Send to backend for additional processing
+        fetch('/api/identify-sounds', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: transcriptData })
+        })
         .then(response => response.json())
         .then(data => {
             if (data.sounds) {
@@ -53,10 +77,12 @@ recognition.onresult = (event) => {
             }
 
             // Update highlights and sentiment
-            highlightSoundWords(transcript);
+            highlightSoundWords(transcriptData);
             sentimentDiv.textContent = `Sentiment: ${data.sentiment}`;
         })
         .catch(err => console.error('Error identifying sounds:', err));
+    }
+    
 };
 
 // Start/Stop listening
@@ -64,6 +90,8 @@ startStopButton.addEventListener('click', () => {
     if (isListening) {
         recognition.stop();
         isListening = false;
+        alreadyHighlightedText = "";
+        processedTranscriptsArray = [];
         startStopButton.textContent = 'Start Listening';
     } else {
         recognition.start();
